@@ -3,20 +3,13 @@ package com.example.happybirthday
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,30 +21,30 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.happybirthday.ui.theme.HappyBirthdayTheme
+import androidx.core.view.WindowCompat
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Allow drawing behind system bars
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        // Make system bars transparent
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         setContent {
             HappyBirthdayTheme {
-                // Full-screen Box with centered content
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    GreetingWithBackgroundImage(name = "Android")
+                    GreetingWithBackgroundImage()
                 }
             }
         }
@@ -59,63 +52,63 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting(modifier: Modifier = Modifier) {
     Text(
         text = "Sign In To Your Account.",
         style = TextStyle(
-            fontSize = 86.sp,
+            fontSize = 96.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
-            letterSpacing = (-2.5).sp,
-            lineHeight = 66.sp,
+            letterSpacing = (-1.5).sp,
+            lineHeight = 70.sp,
         ),
         color = Color.White,
-        modifier = modifier.padding(top = 60.dp, start = 4.dp, end = 4.dp, bottom = 10.dp),
+        modifier = modifier.padding(top = 60.dp, start = 12.dp, end = 4.dp, bottom = 6.dp),
         textAlign = TextAlign.Left
     )
 }
 
 @Composable
-fun GreetingWithBackgroundImage(name: String) {
+fun GreetingWithBackgroundImage() {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background image filling the entire screen
         Image(
             painter = painterResource(id = R.drawable.gradient),
             contentDescription = "Background image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        // Greeting and LoginForm arranged vertically in a Column
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(12.dp),
+            //horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Greeting(name = name)
-            Text(
-                "Enter your email and password to sign in",
+            Greeting()
+            Text(text = "Don't have an Account? Sign Up",
                 style = TextStyle(
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Thin,
-                    letterSpacing = 3.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = Color.White
                 ),
-                textAlign = TextAlign.Left,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, bottom = 2.dp, top = 2.dp),
+                textAlign = TextAlign.Start
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally)
-            ) {
-                LoginForm()
-            }
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier=Modifier.height(40.dp))
+            LoginForm()
+            Spacer(modifier = Modifier.height(20.dp))
+            OrDivider()
+            Spacer(modifier = Modifier.height(20.dp))
+            GoogleSignInButton {  }
+
+
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginForm() {
     var email by remember { mutableStateOf("") }
@@ -123,58 +116,132 @@ fun LoginForm() {
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Email TextField using Material3's TextField
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+        Text(
+            text = "Email or Username",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = Color.White
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                .border(color = Color.Transparent, width = 0.dp),
-            shape = RoundedCornerShape(12.dp),
+                .padding(start = 6.dp, bottom = 8.dp),
+            textAlign = TextAlign.Start
         )
-
-        // Password field using Material3's OutlinedTextField with a semi-transparent background
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
+        CustomTextField(value = email, onValueChange = { email = it }, label = "Email", keyboardType = KeyboardType.Email)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Password",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = Color.White
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
-            shape = RoundedCornerShape(12.dp),
+                .padding(start = 6.dp, bottom = 8.dp, top = 8.dp),
+            textAlign = TextAlign.Start
         )
-
-        // Login Button
+        CustomTextField(value = password, onValueChange = { password = it }, label = "Password", keyboardType = KeyboardType.Password, isPassword = true)
+        Spacer(modifier = Modifier.height(16.dp))
         LoginButton(name = "Login", onLogin = { /* Handle login action */ })
     }
 }
+
+
+
+
+@Composable
+fun OrDivider() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White, thickness = 1.dp)
+        Text(
+            text = "   or   ",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color.White
+            )
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White, thickness = 1.dp)
+    }
+}
+
+@Composable
+fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: String, keyboardType: KeyboardType, isPassword: Boolean = false) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
+    )
+}
+
+@Composable
+fun GoogleSignInButton(onClick: () -> Unit) {
+    Button(
+        onClick = { onClick() },
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        modifier = Modifier
+            .padding(8.dp)
+            .height(48.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.google_icon),
+            contentDescription = "Google Logo",
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = "Sign in with Google", color = Color.Black)
+    }
+}
+
 
 @Composable
 fun LoginButton(onLogin: () -> Unit, name: String) {
     Button(
         onClick = { onLogin() },
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+        //colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFD5856)),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
         modifier = Modifier
-            .padding(14.dp)
-            .height(60.dp)
-            .width(140.dp),
-        shape = RoundedCornerShape(8.dp)
+            //.padding(12.dp)
+            .height(48.dp)
+            .border(0.1.dp, Color.White, RoundedCornerShape(16.dp))
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Text(text = name)
+        Text(text = name,
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color.White
+            )
+
+        )
     }
 }
 
@@ -182,6 +249,6 @@ fun LoginButton(onLogin: () -> Unit, name: String) {
 @Composable
 fun GreetingPreview() {
     HappyBirthdayTheme {
-        GreetingWithBackgroundImage(name = "Android")
+        GreetingWithBackgroundImage()
     }
 }
