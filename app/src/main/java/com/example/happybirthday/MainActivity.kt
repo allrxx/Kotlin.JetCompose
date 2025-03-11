@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.happybirthday.ui.theme.HappyBirthdayTheme
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -56,14 +57,14 @@ fun Greeting(modifier: Modifier = Modifier) {
     Text(
         text = "Sign In To Your Account.",
         style = TextStyle(
-            fontSize = 96.sp,
+            fontSize = 84.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
             letterSpacing = (-1.5).sp,
             lineHeight = 70.sp,
         ),
         color = Color.White,
-        modifier = modifier.padding(top = 60.dp, start = 12.dp, end = 4.dp, bottom = 6.dp),
+        modifier = modifier.padding(top = 55.dp, start = 12.dp, end = 4.dp, bottom = 4.dp),
         textAlign = TextAlign.Left
     )
 }
@@ -87,7 +88,7 @@ fun GreetingWithBackgroundImage() {
             Greeting()
             Text(text = "Don't have an Account? Sign Up",
                 style = TextStyle(
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 16.sp,
                     color = Color.White
                 ),
@@ -148,6 +149,19 @@ fun LoginForm() {
             textAlign = TextAlign.Start
         )
         CustomTextField(value = password, onValueChange = { password = it }, label = "Password", keyboardType = KeyboardType.Password, isPassword = true)
+
+        Text(
+            text = "Forgot Password?",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 6.dp, bottom = 4.dp, top = 8.dp),
+            textAlign = TextAlign.End
+        )
         Spacer(modifier = Modifier.height(16.dp))
         LoginButton(name = "Login", onLogin = { /* Handle login action */ })
     }
@@ -189,7 +203,8 @@ fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: Strin
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+            .height(52.dp)
+            .background(Color.White, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
             focusedIndicatorColor = Color.Transparent,
