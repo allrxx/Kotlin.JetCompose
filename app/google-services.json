@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "390265319476",
+    "project_id": "kp01-c2967",
+    "storage_bucket": "kp01-c2967.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:390265319476:android:9427d7c5ba7475672a5a61",
+        "android_client_info": {
+          "package_name": "com.example.happybirthday"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW8fAfqmqAjcYVIO-vsvNNTqxhjoz8FIY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

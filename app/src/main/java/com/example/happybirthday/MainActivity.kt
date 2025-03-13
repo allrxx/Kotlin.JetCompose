@@ -1,16 +1,37 @@
 package com.example.happybirthday
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,17 +44,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.happybirthday.ui.theme.HappyBirthdayTheme
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.happybirthday.ui.theme.HappyBirthdayTheme
+import com.google.firebase.FirebaseApp
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseApp.initializeApp(this)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -41,11 +69,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HappyBirthdayTheme {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                val navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
                 ) {
-                    GreetingWithBackgroundImage()
+                    composable("login") {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            GreetingWithBackgroundImage(navController)
+                        }
+                    }
+                    composable("HomeScreen") {
+                        HomeScreen()
+                    }
                 }
             }
         }
@@ -70,7 +109,7 @@ fun Greeting(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun GreetingWithBackgroundImage() {
+fun GreetingWithBackgroundImage(navController: NavController) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.gradient),
@@ -98,7 +137,7 @@ fun GreetingWithBackgroundImage() {
                 textAlign = TextAlign.Start
             )
             Spacer(modifier=Modifier.height(40.dp))
-            LoginForm()
+            LoginForm(navController)
             Spacer(modifier = Modifier.height(20.dp))
             OrDivider()
             Spacer(modifier = Modifier.height(20.dp))
@@ -111,7 +150,7 @@ fun GreetingWithBackgroundImage() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginForm() {
+fun LoginForm(navController: NavController) {  // <-- Add navController
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -122,51 +161,29 @@ fun LoginForm() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Email or Username",
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                color = Color.White
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 6.dp, bottom = 8.dp),
-            textAlign = TextAlign.Start
-        )
+        Text(text = "Email or Username", style = TextStyle(color = Color.White, fontSize = 15.sp))
         CustomTextField(value = email, onValueChange = { email = it }, label = "Email", keyboardType = KeyboardType.Email)
+
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Password",
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                color = Color.White
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 6.dp, bottom = 8.dp, top = 8.dp),
-            textAlign = TextAlign.Start
-        )
+
+        Text(text = "Password", style = TextStyle(color = Color.White, fontSize = 15.sp))
         CustomTextField(value = password, onValueChange = { password = it }, label = "Password", keyboardType = KeyboardType.Password, isPassword = true)
 
-        Text(
-            text = "Forgot Password?",
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                color = Color.White
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 6.dp, bottom = 4.dp, top = 8.dp),
-            textAlign = TextAlign.End
-        )
         Spacer(modifier = Modifier.height(16.dp))
-        LoginButton(name = "Login", onLogin = { /* Handle login action */ })
+
+        LoginButton(name = "Login", onLogin = {
+            signInUser(email, password,
+                onSuccess = {
+                    Log.d("Auth", "Sign-in successful!")
+                    navController.navigate("HomeScreen")  // <-- Navigate to HomeScreen
+                },
+                onFailure = { e ->
+                    Log.e("Auth", "Sign-in failed: ${e.message}")
+                }
+            )
+        })
     }
 }
-
 
 
 
@@ -264,6 +281,7 @@ fun LoginButton(onLogin: () -> Unit, name: String) {
 @Composable
 fun GreetingPreview() {
     HappyBirthdayTheme {
-        GreetingWithBackgroundImage()
+        val navController = rememberNavController()
+        GreetingWithBackgroundImage(navController)
     }
 }
