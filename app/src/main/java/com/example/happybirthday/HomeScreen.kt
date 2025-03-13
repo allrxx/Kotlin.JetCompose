@@ -18,6 +18,7 @@ fun HomeScreen() {  // Fixed naming convention (capital H)
             text = "Welcome to Home Screen",
             fontSize = 24.sp
         )
+
     }
 }
 
