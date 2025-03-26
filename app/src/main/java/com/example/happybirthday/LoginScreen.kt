@@ -83,8 +83,6 @@ fun LoginScreen(navController: NavController) {
             OrDivider()
             Spacer(modifier = Modifier.height(20.dp))
             GoogleSignInButton {  }
-
-
         }
     }
 }
@@ -168,7 +166,7 @@ fun LoginForm(navController: NavController) {  // <-- Add navController
             signInUser(email, password,
                 onSuccess = {
                     Log.d("Auth", "Sign-in successful!")
-                    navController.navigate("HomeScreen")  // <-- Navigate to HomeScreen
+                    navController.navigate("home")  // <-- Navigate to HomeScreen
                 },
                 onFailure = { e ->
                     Log.e("Auth", "Sign-in failed: ${e.message}")

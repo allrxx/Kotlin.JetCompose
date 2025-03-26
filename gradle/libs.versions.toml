@@ -1,6 +1,6 @@
 [versions]
 agp = "8.9.0"
-firebaseBom = "33.10.0"
+firebaseBom = "33.11.0"
 kotlin = "2.0.21"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -14,9 +14,11 @@ firebaseAuth = "23.2.0"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
-navigationCompose = "2.8.8"
+navigationCompose = "2.8.9"
+compose-animation = "1.7.8"
 
 [libraries]
+androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "compose-animation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
