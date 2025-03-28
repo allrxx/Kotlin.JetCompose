@@ -29,17 +29,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-data class NoteItem(
-    val id: String,
-    val text: String = "",
-    val isExpanded: Boolean = false
-)
-
 @Composable
 fun NoteEditorItem(
     note: NoteItem,
     onUpdate: (NoteItem) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit = {} // Added this parameter
 ) {
     Box(
         modifier = Modifier
@@ -47,9 +42,15 @@ fun NoteEditorItem(
             .animateContentSize(animationSpec = tween(durationMillis = 300))
             .clip(RoundedCornerShape(24.dp))
             .background(Color(0xFFF5F5F5))
-            .clickable { if (!note.isExpanded) onUpdate(note.copy(isExpanded = true)) }
+            .clickable {
+                if (!note.isExpanded) {
+                    onClick() // Navigate to EditorScreen instead of expanding
+                } else {
+                    onUpdate(note.copy(isExpanded = true))
+                }
+            }
             .padding(20.dp, 16.dp)
-    ) {
+    ){
         if (note.isExpanded) {
             Column(
                 modifier = Modifier

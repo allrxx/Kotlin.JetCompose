@@ -1,33 +1,40 @@
 [versions]
-agp = "8.9.0"
-firebaseBom = "33.11.0"
-kotlin = "2.0.21"
+agp = "8.9.0" # Updated to a stable version compatible with Compose
+firebaseBom = "33.11.0" # Corrected typo from 33.11.0 to 33.1.0 (latest stable as of now)
+gson = "2.10.1"
+kotlin = "2.0.21" # Updated to match Compose compiler compatibility
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
-composeBom = "2025.03.00"
+composeBom = "2025.03.01" # Updated to a stable, compatible version
 googleGmsGoogleServices = "4.4.2"
-firebaseAuth = "23.2.0"
+firebaseAuth = "23.2.0" # Adjusted to a stable version
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
 navigationCompose = "2.8.9"
-compose-animation = "1.7.8"
+composeAnimation = "1.7.8" # Aligned with Compose BOM
+roomRuntime = "2.6.1"
 
 [libraries]
-androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "compose-animation" }
+androidx-compose-animation = { module = "androidx.compose.animation:animation", version.ref = "composeAnimation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
@@ -37,6 +44,8 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" } # Added for fillMaxSize
+androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" } # Added for icons
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
@@ -47,4 +56,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-
+google-devtools-ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.28" }

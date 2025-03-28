@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -104,11 +105,15 @@ fun Greeting(modifier: Modifier = Modifier) {
     )
 }
 
+// LoginScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginForm(navController: NavController) {  // <-- Add navController
+fun LoginForm(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var authError by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -117,9 +122,9 @@ fun LoginForm(navController: NavController) {  // <-- Add navController
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
+        // Email Input
         Text(
-            text = "Email or Username",
+            text = "Email",
             style = TextStyle(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
@@ -131,9 +136,22 @@ fun LoginForm(navController: NavController) {  // <-- Add navController
             textAlign = TextAlign.Start
         )
 
-        CustomTextField(value = email, onValueChange = { email = it }, label = "Email", keyboardType = KeyboardType.Email)
-        Spacer(modifier = Modifier.height(8.dp))
+        CustomTextField(
+            value = email,
+            onValueChange = {
+                email = it
+                emailError = null
+                authError = null
+            },
+            label = "Email",
+            keyboardType = KeyboardType.Email
+        )
 
+        emailError?.let {
+            ErrorText(message = it)
+        }
+
+        // Password Input
         Text(
             text = "Password",
             style = TextStyle(
@@ -146,7 +164,18 @@ fun LoginForm(navController: NavController) {  // <-- Add navController
                 .padding(start = 6.dp, top = 8.dp, bottom = 8.dp),
             textAlign = TextAlign.Start
         )
-        CustomTextField(value = password, onValueChange = { password = it }, label = "Password", keyboardType = KeyboardType.Password, isPassword = true)
+
+        CustomTextField(
+            value = password,
+            onValueChange = {
+                password = it
+                authError = null
+            },
+            label = "Password",
+            keyboardType = KeyboardType.Password,
+            isPassword = true
+        )
+
         Text(
             text = "Forgot Password?",
             style = TextStyle(
@@ -160,22 +189,50 @@ fun LoginForm(navController: NavController) {  // <-- Add navController
             textAlign = TextAlign.End
         )
 
+        authError?.let {
+            ErrorText(message = it)
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        LoginButton(name = "Login", onLogin = {
-            signInUser(email, password,
-                onSuccess = {
-                    Log.d("Auth", "Sign-in successful!")
-                    navController.navigate("home")  // <-- Navigate to HomeScreen
-                },
-                onFailure = { e ->
-                    Log.e("Auth", "Sign-in failed: ${e.message}")
+        LoginButton(
+            name = "Login",
+            isLoading = isLoading,
+            onLogin = {
+                val error = validateCredentials(email, password)
+                if (error != null) {
+                    emailError = error
+                    return@LoginButton
                 }
-            )
-        })
+
+                isLoading = true
+                signInUser(
+                    email, password,
+                    onSuccess = {
+                        isLoading = false
+                        navController.navigate("home")
+                    },
+                    onFailure = { e ->
+                        isLoading = false
+                        authError = e.message ?: "Authentication failed"
+                    }
+                )
+            }
+        )
     }
 }
 
+@Composable
+fun ErrorText(message: String) {
+    Text(
+        text = message,
+        color = Color.Red,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 6.dp, top = 4.dp),
+        textAlign = TextAlign.Start
+    )
+}
 
 
 @Composable
@@ -243,28 +300,41 @@ fun GoogleSignInButton(onClick: () -> Unit) {
     }
 }
 
-
 @Composable
-fun LoginButton(onLogin: () -> Unit, name: String) {
+fun LoginButton(
+    name: String,
+    isLoading: Boolean,
+    onLogin: () -> Unit
+) {
     Button(
-        onClick = { onLogin() },
-        //colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFD5856)),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        onClick = onLogin,
+        enabled = !isLoading,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent.copy(alpha = 0.5f)
+        ),
         modifier = Modifier
-            //.padding(12.dp)
             .height(48.dp)
             .border(0.1.dp, Color.White, RoundedCornerShape(16.dp))
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Text(text = name,
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = Color.White
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(24.dp),
+                strokeWidth = 2.dp
             )
-
-        )
+        } else {
+            Text(
+                text = name,
+                style = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.White
+                )
+            )
+        }
     }
 }
 
