@@ -1,6 +1,5 @@
 package com.example.happybirthday
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,7 +50,7 @@ import com.example.happybirthday.ui.theme.AppTheme
 
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.gradient),
@@ -343,6 +342,10 @@ fun LoginButton(
 fun LoginScreenPreview() {
     AppTheme {
         val navController = rememberNavController()
-        LoginScreen(navController)
+        LoginScreen(navController) {
+            navController.navigate("home") {
+                popUpTo(navController.graph.id) { inclusive = true }
+            }
+        }
     }
 }

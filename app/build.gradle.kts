@@ -51,6 +51,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 // For annotation processing
     implementation(libs.androidx.room.ktx)
+    implementation(libs.google.firebase.auth.ktx)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

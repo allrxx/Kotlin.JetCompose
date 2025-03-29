@@ -40,6 +40,7 @@ fun registerUser(
 
 fun signOutUser() {
     auth.signOut()
+
 }
 
 fun getCurrentUserId(): String {

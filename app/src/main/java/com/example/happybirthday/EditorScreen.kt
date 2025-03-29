@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
@@ -31,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-
 @Composable
 fun EditorScreen(
     navController: NavController,
@@ -46,8 +47,9 @@ fun EditorScreen(
             .background(Color(0xFFF5F5F5))
             .systemBarsPadding()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.Top
     ) {
+        // Header with Back and Save buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -67,12 +69,6 @@ fun EditorScreen(
                 Log.d("EditorScreen", "Save button clicked, noteText: $noteText")
                 val updatedNote = note.copy(text = noteText)
                 onSave(updatedNote)
-                try {
-                    navController.navigateUp() // Safer navigation back
-                } catch (e: Exception) {
-                    Log.e("EditorScreen", "Navigation error: ${e.message}")
-                    navController.navigate("home") // Fallback
-                }
             }) {
                 Icon(
                     imageVector = Icons.Filled.Save,
@@ -82,37 +78,39 @@ fun EditorScreen(
             }
         }
 
-        Column(
+        // Space between header and content
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Note title
+        Text(
+            text = "Note",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            fontFamily = MaterialTheme.typography.headlineLarge.fontFamily
+        )
+
+        // Space between title and text field
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Text field taking remaining space
+        TextField(
+            value = noteText,
+            onValueChange = { noteText = it },
             modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Note",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black,
-                fontFamily = MaterialTheme.typography.headlineLarge.fontFamily
-            )
-            TextField(
-                value = noteText,
-                onValueChange = { noteText = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                label = { Text("Note Content") }, // Added for accessibility
-                placeholder = { Text("Enter your note...") },
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent
-                ),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-                singleLine = false, // Allow multi-line input
-                maxLines = Int.MAX_VALUE // Unlimited lines
-            )
-        }
+                .fillMaxWidth()
+                .weight(1f),
+            label = { Text("Note Content") },
+            placeholder = { Text("Enter your note...") },
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+            singleLine = false,
+            maxLines = Int.MAX_VALUE
+        )
     }
 }
