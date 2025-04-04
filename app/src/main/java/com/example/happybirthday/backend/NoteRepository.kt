@@ -5,10 +5,9 @@ import com.example.happybirthday.getCurrentUserId
 class NoteRepository(private val noteDao: NoteDao) {
 
     private val userId: String
-        get() = getCurrentUserId() ?: throw IllegalStateException("User not logged in")
+        get() = getCurrentUserId()
 
     fun getAllNotesForUser(userId: String) = noteDao.getAllNotesForUser(userId)
-    fun getNotesForWorkspace(workspaceId: Long) = noteDao.getNotesForWorkspace(userId, workspaceId)
 
     suspend fun insert(note: NoteEntity) {
         noteDao.insertNote(note.copy(userId = userId).withUpdatedTimestamp())

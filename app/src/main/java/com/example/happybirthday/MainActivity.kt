@@ -12,7 +12,6 @@ import com.example.happybirthday.backend.NoteViewModel
 import com.example.happybirthday.backend.NoteViewModelFactory
 import com.example.happybirthday.ui.theme.AppTheme
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -24,9 +23,6 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-
-        // Retrieve the Firebase UID (or handle null appropriately)
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "defaultUser"
 
         // Create repository from Room database
         val database = AppDatabase.getInstance(this)

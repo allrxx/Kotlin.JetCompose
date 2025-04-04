@@ -6,9 +6,9 @@ import com.example.happybirthday.getCurrentUserId
 import kotlinx.coroutines.flow.Flow // Add this import
 import kotlinx.coroutines.launch
 
-class NoteViewModel(private val repository: NoteRepository, userId1: String) : ViewModel() {
+class NoteViewModel(private val repository: NoteRepository, userId: String) : ViewModel() {
     // Example: Fetch notes for the specific user using userId
-    private val userId: String = getCurrentUserId() ?: throw IllegalStateException("User not logged in")
+    private val userId: String = getCurrentUserId()
     val allNotes: Flow<List<NoteEntity>> = repository.getAllNotesForUser(userId)
 
     // Public getter for userId

@@ -3,32 +3,11 @@ package com.example.happybirthday
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,16 +20,46 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.happybirthday.ui.theme.AppTheme
-
+import com.example.happybirthday.backend.AuthResult
+import com.example.happybirthday.backend.AuthViewModel
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 
 @Composable
 fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
+    val authViewModel: AuthViewModel = viewModel()
+    // Define states in LoginScreen
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var authError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(authViewModel.authResult) {
+        authViewModel.authResult.collect { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    isLoading = false
+                    onLoginSuccess()
+                }
+                is AuthResult.Error -> {
+                    isLoading = false
+                    authError = when (result.exception) {
+                        is FirebaseAuthInvalidUserException -> "User not found"
+                        is FirebaseAuthInvalidCredentialsException -> "Invalid credentials"
+                        else -> "Login failed: ${result.exception?.message}"
+                    }
+                }
+                AuthResult.Loading -> isLoading = true
+                AuthResult.Idle -> isLoading = false
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.gradient),
@@ -62,27 +71,41 @@ fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp),
-            //horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
             Greeting()
-            Text(text = "Don't have an Account? Sign Up",
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    color = Color.White
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 12.dp, bottom = 2.dp, top = 2.dp),
-                textAlign = TextAlign.Start
+            TextButton(onClick = { navController.navigate("registration") }) {
+                Text(
+                    text = "Don't have an Account? Sign Up",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, bottom = 2.dp, top = 2.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
+            Spacer(modifier = Modifier.height(40.dp))
+            LoginForm(
+                email = email,
+                onEmailChange = { email = it },
+                password = password,
+                onPasswordChange = { password = it },
+                isLoading = isLoading,
+                emailError = emailError,
+                authError = authError,
+                onLogin = {
+
+                        authViewModel.loginUser(email, password)
+                }
             )
-            Spacer(modifier=Modifier.height(40.dp))
-            LoginForm(navController)
             Spacer(modifier = Modifier.height(20.dp))
             OrDivider()
             Spacer(modifier = Modifier.height(20.dp))
-            GoogleSignInButton {  }
+            GoogleSignInButton { /* Handle Google Sign-In */ }
         }
     }
 }
@@ -96,7 +119,7 @@ fun Greeting(modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
             letterSpacing = (-1.5).sp,
-            lineHeight = 70.sp,
+            lineHeight = 70.sp
         ),
         color = Color.White,
         modifier = modifier.padding(top = 55.dp, start = 12.dp, end = 4.dp, bottom = 4.dp),
@@ -104,16 +127,18 @@ fun Greeting(modifier: Modifier = Modifier) {
     )
 }
 
-// LoginScreen.kt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginForm(navController: NavController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var authError by remember { mutableStateOf<String?>(null) }
-
+fun LoginForm(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isLoading: Boolean,
+    emailError: String?,
+    authError: String?,
+    onLogin: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,9 +163,8 @@ fun LoginForm(navController: NavController) {
         CustomTextField(
             value = email,
             onValueChange = {
-                email = it
-                emailError = null
-                authError = null
+                onEmailChange(it)
+                // Clear errors when user types
             },
             label = "Email",
             keyboardType = KeyboardType.Email
@@ -166,10 +190,7 @@ fun LoginForm(navController: NavController) {
 
         CustomTextField(
             value = password,
-            onValueChange = {
-                password = it
-                authError = null
-            },
+            onValueChange = onPasswordChange,
             label = "Password",
             keyboardType = KeyboardType.Password,
             isPassword = true
@@ -197,26 +218,7 @@ fun LoginForm(navController: NavController) {
         LoginButton(
             name = "Login",
             isLoading = isLoading,
-            onLogin = {
-                val error = validateCredentials(email, password)
-                if (error != null) {
-                    emailError = error
-                    return@LoginButton
-                }
-
-                isLoading = true
-                signInUser(
-                    email, password,
-                    onSuccess = {
-                        isLoading = false
-                        navController.navigate("home")
-                    },
-                    onFailure = { e ->
-                        isLoading = false
-                        authError = e.message ?: "Authentication failed"
-                    }
-                )
-            }
+            onLogin = onLogin
         )
     }
 }
@@ -233,7 +235,6 @@ fun ErrorText(message: String) {
     )
 }
 
-
 @Composable
 fun OrDivider() {
     Row(
@@ -241,7 +242,6 @@ fun OrDivider() {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
-
     ) {
         HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White, thickness = 1.dp)
         Text(
@@ -257,7 +257,13 @@ fun OrDivider() {
 }
 
 @Composable
-fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: String, keyboardType: KeyboardType, isPassword: Boolean = false) {
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    keyboardType: KeyboardType,
+    isPassword: Boolean = false
+) {
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -274,7 +280,7 @@ fun CustomTextField(value: String, onValueChange: (String) -> Unit, label: Strin
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
-        ),
+        )
     )
 }
 
@@ -337,15 +343,3 @@ fun LoginButton(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    AppTheme {
-        val navController = rememberNavController()
-        LoginScreen(navController) {
-            navController.navigate("home") {
-                popUpTo(navController.graph.id) { inclusive = true }
-            }
-        }
-    }
-}

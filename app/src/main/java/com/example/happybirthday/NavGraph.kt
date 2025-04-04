@@ -30,7 +30,6 @@ fun AppNavigation(noteViewModel: NoteViewModel) {
     ) {
         composable("auth") {
             AuthScreen(
-                navController = navController,
                 onAuthSuccess = { navController.navigate("home") },
                 onAuthNeeded = { navController.navigate("login") }
             )
@@ -44,6 +43,13 @@ fun AppNavigation(noteViewModel: NoteViewModel) {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable("registration") {
+            RegistrationScreen(
+                navController = navController,
+                onLoginNavigate = { navController.navigate("login") }
             )
         }
 

@@ -47,6 +47,8 @@ android {
 
 dependencies {
 
+    implementation(libs.material3)
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 // For annotation processing
