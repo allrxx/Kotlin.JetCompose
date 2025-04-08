@@ -13,7 +13,6 @@ import com.example.happybirthday.backend.NoteViewModelFactory
 import com.example.happybirthday.ui.theme.AppTheme
 import com.google.firebase.FirebaseApp
 
-@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
     // Initialize Firebase
@@ -25,7 +24,7 @@ class MainActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // Create repository from Room database
-        val database = AppDatabase.getInstance(this)
+        val database = AppDatabase.getDatabase(this)
         val repository = NoteRepository(database.noteDao())
 
         // Create NoteViewModel using custom factory

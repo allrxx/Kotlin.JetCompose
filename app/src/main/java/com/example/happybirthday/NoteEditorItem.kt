@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -18,10 +17,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,8 +29,6 @@ fun NoteEditorItem(
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(note.isExpanded) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,35 +40,35 @@ fun NoteEditorItem(
             modifier = Modifier
                 .padding(12.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
+            Text(
+                text = note.title.takeIf { it.isNotBlank() } ?: note.text.takeIf { it.isNotBlank() } ?: "New Note",
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = note.text.takeIf { it.isNotBlank() } ?: "New Note",
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = if (isExpanded) Int.MAX_VALUE else 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(
-                    onClick = {
-                        isExpanded = !isExpanded
-                        onUpdate(note.copy(isExpanded = isExpanded))
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand"
-                    )
-                }
-            }
+            )
+            Text(
+                text = note.text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+            )
 
             Row(
                 horizontalArrangement = Arrangement.End,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             ) {
+                IconButton(
+                    onClick = onClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit"
+                    )
+                }
                 IconButton(
                     onClick = onDelete
                 ) {
@@ -83,15 +76,6 @@ fun NoteEditorItem(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
                         tint = Color.Red
-                    )
-                }
-
-                IconButton(
-                    onClick = onClick
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit"
                     )
                 }
             }

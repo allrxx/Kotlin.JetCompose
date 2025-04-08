@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun EditorScreen(
@@ -40,6 +41,7 @@ fun EditorScreen(
     onSave: (NoteItem) -> Unit
 ) {
     var noteText by remember { mutableStateOf(note.text) }
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     Column(
         modifier = Modifier
@@ -65,11 +67,26 @@ fun EditorScreen(
                     tint = Color.Black
                 )
             }
-            IconButton(onClick = {
-                Log.d("EditorScreen", "Save button clicked, noteText: $noteText")
-                val updatedNote = note.copy(text = noteText)
-                onSave(updatedNote)
-            }) {
+            IconButton(
+                onClick = {
+                    Log.d("EditorScreen", "Save button clicked, noteText: $noteText")
+                    if (currentUser != null) {
+                        val updatedNote = note.copy(text = noteText)
+                        Log.d("EditorScreen", "Saving note for user: ${currentUser.uid}")
+                        onSave(updatedNote)
+                        // Navigate back to home screen
+                        navController.navigate("home") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    } else {
+                        Log.e("EditorScreen", "No authenticated user found")
+                        // Navigate to auth screen if user is not authenticated
+                        navController.navigate("auth") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Save,
                     contentDescription = "Save",

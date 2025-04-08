@@ -43,7 +43,8 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 @Composable
 fun RegistrationScreen(
     navController: NavController,
-    onLoginNavigate: () -> Unit
+    onLoginNavigate: () -> Unit,
+    onRegistrationSuccess: () -> Unit
 ) {
     val authViewModel: AuthViewModel = viewModel()
     val context = LocalContext.current
@@ -58,11 +59,7 @@ fun RegistrationScreen(
             when (result) {
                 is AuthResult.Success -> {
                     isLoading = false
-                    navController.navigate("home") {
-                        popUpTo(navController.graph.startDestinationId) {
-                            inclusive = true
-                        }
-                    }
+                    onRegistrationSuccess()
                 }
                 is AuthResult.Error -> {
                     isLoading = false
@@ -77,7 +74,7 @@ fun RegistrationScreen(
                 }
                 AuthResult.Idle -> {
                     isLoading = false
-                    errorMessage = null // Optionally clear error messages
+                    errorMessage = null
                 }
             }
         }

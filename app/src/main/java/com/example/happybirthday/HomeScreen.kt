@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,14 +25,27 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.happybirthday.backend.NoteViewModel
 import com.example.happybirthday.backend.toNoteEntity
-import com.example.happybirthday.backend.toNoteItem
+import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import java.util.UUID
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel,onLogout: () -> Unit ) {
-    val notes by noteViewModel.allNotes.collectAsState(initial = emptyList())
+fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLogout: () -> Unit) {
+    val notes by noteViewModel.notes.collectAsState()
+    val auth = FirebaseAuth.getInstance()
+
+    LaunchedEffect(Unit) {
+        auth.currentUser?.uid?.let {
+            noteViewModel.loadNotes()
+        } ?: run {
+            Log.e("HomeScreen", "No authenticated user found, cannot load notes")
+            onLogout()
+        }
+    }
+    
+    Log.d("HomeScreen", "Number of notes: ${notes.size}")
 
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
@@ -39,18 +53,7 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel,onLogo
             TopAppBar(
                 title = { Text("Notes") },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            signOutUser()
-                            onLogout()
-                            // Navigate to login screen and clear back stack
-                            navController.navigate("login") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = true
-                                }
-                            }
-                        }
-                    ) {
+                    IconButton(onClick = onLogout) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
                             contentDescription = "Sign out"
@@ -62,10 +65,7 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel,onLogo
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    val newNote = NoteItem(
-                        id = UUID.randomUUID().toString(),
-                        text = ""
-                    )
+                    val newNote = NoteItem()
                     val noteJson = Gson().toJson(newNote)
                     navController.navigate("editor/$noteJson") {
                         launchSingleTop = true
@@ -85,16 +85,22 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel,onLogo
         ) {
             items(
                 items = notes,
-                key = { noteEntity -> noteEntity.id }
-            ) { noteEntity ->
-                val noteItem = noteEntity.toNoteItem()
+                key = { noteItem -> noteItem.id }
+            ) { noteItem ->
                 NoteEditorItem(
                     note = noteItem,
                     onUpdate = { updatedNote ->
-                        noteViewModel.updateNote(updatedNote.toNoteEntity(noteViewModel.getUserId()))
+                        Log.d("HomeScreen", "Updating note: ${updatedNote.id}")
+                        val userId = auth.currentUser?.uid
+                        if (userId != null) {
+                            noteViewModel.updateNote(updatedNote.toNoteEntity(userId))
+                        } else {
+                            Log.e("HomeScreen", "Cannot update note, user not logged in")
+                        }
                     },
                     onDelete = {
-                        noteViewModel.delete(noteEntity)
+                        Log.d("HomeScreen", "Deleting note: ${noteItem.id}")
+                        noteViewModel.deleteNoteById(noteItem.id)
                     },
                     onClick = {
                         val noteJson = Gson().toJson(noteItem)
