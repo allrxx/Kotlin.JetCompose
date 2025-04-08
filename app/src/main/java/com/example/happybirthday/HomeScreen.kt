@@ -35,6 +35,7 @@ import android.util.Log
 fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLogout: () -> Unit) {
     val notes by noteViewModel.notes.collectAsState()
     val auth = FirebaseAuth.getInstance()
+    //alex
 
     LaunchedEffect(Unit) {
         auth.currentUser?.uid?.let {
