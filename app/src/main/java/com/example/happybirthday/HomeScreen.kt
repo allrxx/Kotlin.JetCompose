@@ -1,6 +1,9 @@
 package com.example.happybirthday
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -9,10 +12,12 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -20,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -34,8 +40,8 @@ import android.util.Log
 @Composable
 fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLogout: () -> Unit) {
     val notes by noteViewModel.notes.collectAsState()
+    val isLoading by noteViewModel.isLoading.collectAsState()
     val auth = FirebaseAuth.getInstance()
-    //alex
 
     LaunchedEffect(Unit) {
         auth.currentUser?.uid?.let {
@@ -46,13 +52,11 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
         }
     }
     
-    Log.d("HomeScreen", "Number of notes: ${notes.size}")
-
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
         topBar = {
             TopAppBar(
-                title = { Text("Notes") },
+                title = { Text("My Notes") },
                 actions = {
                     IconButton(onClick = onLogout) {
                         Icon(
@@ -71,43 +75,44 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
                     navController.navigate("editor/$noteJson") {
                         launchSingleTop = true
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "New Note")
             }
         }
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = paddingValues,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(16.dp)
-        ) {
-            items(
-                items = notes,
-                key = { noteItem -> noteItem.id }
-            ) { noteItem ->
-                NoteEditorItem(
-                    note = noteItem,
-                    onUpdate = { updatedNote ->
-                        Log.d("HomeScreen", "Updating note: ${updatedNote.id}")
-                        val userId = auth.currentUser?.uid
-                        if (userId != null) {
-                            noteViewModel.updateNote(updatedNote.toNoteEntity(userId))
-                        } else {
-                            Log.e("HomeScreen", "Cannot update note, user not logged in")
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(paddingValues)
+            ) {
+                items(
+                    items = notes,
+                    key = { noteItem -> noteItem.id }
+                ) { noteItem ->
+                    NoteEditorItem(
+                        note = noteItem,
+                        onUpdate = { updatedNote ->
+                            // Currently unused in this simplified item
+                        },
+                        onDelete = {
+                            Log.d("HomeScreen", "Deleting note: ${noteItem.id}")
+                            noteViewModel.deleteNoteById(noteItem.id)
+                        },
+                        onClick = {
+                            val noteJson = Gson().toJson(noteItem)
+                            navController.navigate("editor/$noteJson")
                         }
-                    },
-                    onDelete = {
-                        Log.d("HomeScreen", "Deleting note: ${noteItem.id}")
-                        noteViewModel.deleteNoteById(noteItem.id)
-                    },
-                    onClick = {
-                        val noteJson = Gson().toJson(noteItem)
-                        navController.navigate("editor/$noteJson")
-                    }
-                )
+                    )
+                }
             }
         }
     }
