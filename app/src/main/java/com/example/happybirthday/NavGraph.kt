@@ -8,12 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.happybirthday.backend.NoteViewModel
 import com.example.happybirthday.backend.toNoteEntity
+import com.example.happybirthday.backend.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.gson.Gson
@@ -50,7 +47,7 @@ fun FirebaseAuth.authScreenStateFlow(): Flow<AuthScreenState> {
 }
 
 @Composable
-fun AppNavigation(noteViewModel: NoteViewModel) {
+fun AppNavigation(noteViewModel: NoteViewModel, profileViewModel: ProfileViewModel) {
     val navController = rememberNavController()
     val auth = FirebaseAuth.getInstance()
     
@@ -106,6 +103,27 @@ fun AppNavigation(noteViewModel: NoteViewModel) {
                     }
                 }
             )
+        }
+
+        // Add the Profile Screen destination
+        composable("profile") {
+            val currentAuthState = authState // Capture the state locally
+            if (currentAuthState is AuthScreenState.Authenticated) {
+                // Pass ProfileViewModel to ProfileScreen
+                ProfileScreen(
+                    navController = navController,
+                    user = currentAuthState.user,
+                    profileViewModel = profileViewModel // Pass ViewModel here
+                )
+            } else {
+                // If somehow navigated here while unauthenticated, redirect to login
+                Log.w("NavGraph", "User became unauthenticated in profile, navigating to login")
+                LaunchedEffect(Unit) { // Use LaunchedEffect for side effects like navigation
+                    navController.navigate("login") {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                }
+            }
         }
 
         composable(

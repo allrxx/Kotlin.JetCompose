@@ -2,6 +2,7 @@ package com.example.happybirthday
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -21,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +45,7 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
     val notes by noteViewModel.notes.collectAsState()
     val isLoading by noteViewModel.isLoading.collectAsState()
     val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser
 
     LaunchedEffect(Unit) {
         auth.currentUser?.uid?.let {
@@ -56,8 +60,27 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
         modifier = Modifier.systemBarsPadding(),
         topBar = {
             TopAppBar(
-                title = { Text("My Notes") },
+                title = {
+                    Column {
+                        Text("My Notes")
+                        currentUser?.email?.let { email ->
+                            Text(
+                                text = email,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                },
                 actions = {
+                    IconButton(onClick = {
+                        // Navigate to the profile screen
+                        navController.navigate("profile")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile"
+                        )
+                    }
                     IconButton(onClick = onLogout) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,

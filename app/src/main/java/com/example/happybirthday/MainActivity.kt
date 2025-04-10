@@ -10,6 +10,9 @@ import com.example.happybirthday.backend.AppDatabase
 import com.example.happybirthday.backend.NoteRepository
 import com.example.happybirthday.backend.NoteViewModel
 import com.example.happybirthday.backend.NoteViewModelFactory
+import com.example.happybirthday.backend.UserProfileRepository
+import com.example.happybirthday.backend.ProfileViewModel
+import com.example.happybirthday.backend.ProfileViewModelFactory
 import com.example.happybirthday.ui.theme.AppTheme
 import com.google.firebase.FirebaseApp
 
@@ -23,18 +26,22 @@ class MainActivity : ComponentActivity() {
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
-        // Create repository from Room database
+        // Create repositories from Room database
         val database = AppDatabase.getDatabase(this)
-        val repository = NoteRepository(database.noteDao())
+        val noteRepository = NoteRepository(database.noteDao())
+        val userProfileRepository = UserProfileRepository(database.userProfileDao())
 
-        // Create NoteViewModel using custom factory
+        // Create ViewModels using custom factories
         val noteViewModel: NoteViewModel by viewModels {
-            NoteViewModelFactory(repository)
+            NoteViewModelFactory(noteRepository)
+        }
+        val profileViewModel: ProfileViewModel by viewModels {
+            ProfileViewModelFactory(userProfileRepository)
         }
 
         setContent {
             AppTheme {
-                AppNavigation(noteViewModel)
+                AppNavigation(noteViewModel, profileViewModel)
             }
         }
     }
