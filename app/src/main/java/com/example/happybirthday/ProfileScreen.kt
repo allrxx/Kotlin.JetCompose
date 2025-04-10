@@ -14,6 +14,7 @@ import androidx.navigation.NavController
 import com.example.happybirthday.backend.ProfileViewModel
 import com.example.happybirthday.backend.SaveState
 import com.google.firebase.auth.FirebaseUser
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +31,17 @@ fun ProfileScreen(
     val saveState by profileViewModel.saveState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(user?.uid) {
+        val userId = user?.uid
+        if (userId != null) {
+            Log.d("ProfileScreen", "LaunchedEffect triggered: Loading profile for $userId")
+            profileViewModel.loadProfile(userId)
+        } else {
+            Log.w("ProfileScreen", "LaunchedEffect triggered: User is null, clearing profile.")
+            profileViewModel.clearProfile()
+        }
+    }
 
     LaunchedEffect(saveState) {
         when (val state = saveState) {
@@ -123,7 +135,7 @@ fun ProfileScreen(
                     }
                 }
             } else {
-                Text("Error: No user logged in.", modifier = Modifier.align(Alignment.Center))
+                Text("User not available.", modifier = Modifier.align(Alignment.Center))
             }
         }
     }

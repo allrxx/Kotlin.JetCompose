@@ -1,133 +1,204 @@
 package com.example.happybirthday
 
 import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.happybirthday.backend.NoteViewModel
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(
     navController: NavController,
     note: NoteItem,
-    onSave: (NoteItem) -> Unit
+    noteViewModel: NoteViewModel,
+    onSave: (updatedNote: NoteItem, callback: (Result<Unit>) -> Unit) -> Unit
 ) {
+    var noteTitle by remember { mutableStateOf(note.title) }
     var noteText by remember { mutableStateOf(note.text) }
     val currentUser = FirebaseAuth.getInstance().currentUser
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy, hh:mm a", Locale.getDefault()) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .systemBarsPadding()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
-        // Header with Back and Save buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = {
-                Log.d("EditorScreen", "Back button clicked")
-                navController.popBackStack()
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.Black
-                )
-            }
-            IconButton(
-                onClick = {
-                    Log.d("EditorScreen", "Save button clicked, noteText: $noteText")
-                    if (currentUser != null) {
-                        val updatedNote = note.copy(text = noteText)
-                        Log.d("EditorScreen", "Saving note for user: ${currentUser.uid}")
-                        onSave(updatedNote)
-                        // Navigate back to home screen
-                        navController.navigate("home") {
-                            popUpTo("home") { inclusive = true }
-                        }
-                    } else {
-                        Log.e("EditorScreen", "No authenticated user found")
-                        // Navigate to auth screen if user is not authenticated
-                        navController.navigate("auth") {
-                            popUpTo(0) { inclusive = true }
+    var isSaving by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        noteViewModel.errorFlow.collect { errorMessage ->
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                duration = SnackbarDuration.Long
+            )
+            isSaving = false
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.systemBarsPadding(),
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Edited: ${dateFormat.format(Date(note.updatedAt))}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        Log.d("EditorScreen", "Back button clicked - potentially saving draft?")
+                        navController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (isSaving) return@IconButton
+
+                            Log.d("EditorScreen", "Save button clicked")
+                            if (currentUser != null) {
+                                val updatedNote = note.copy(
+                                    title = noteTitle.trim(),
+                                    text = noteText.trim()
+                                )
+                                if (updatedNote.title.isNotEmpty() || updatedNote.text.isNotEmpty() || note.id == updatedNote.id) {
+                                    isSaving = true
+                                    Log.d("EditorScreen", "Calling onSave for note: ${updatedNote.id}")
+                                    onSave(updatedNote) { result ->
+                                        scope.launch {
+                                            isSaving = false
+                                            if (result.isSuccess) {
+                                                Log.d("EditorScreen", "Save successful, navigating back.")
+                                                navController.popBackStack()
+                                            } else {
+                                                Log.e("EditorScreen", "Save failed", result.exceptionOrNull())
+                                                snackbarHostState.showSnackbar(
+                                                    message = "Save failed: ${result.exceptionOrNull()?.localizedMessage ?: "Unknown error"}",
+                                                    duration = SnackbarDuration.Long
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Log.d("EditorScreen", "Not saving empty new note, navigating back.")
+                                    navController.popBackStack()
+                                }
+                            } else {
+                                Log.e("EditorScreen", "No authenticated user found")
+                                navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                            }
+                        },
+                        enabled = !isSaving
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save Note",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Save,
-                    contentDescription = "Save",
-                    tint = Color.Black
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
+            )
         }
-
-        // Space between header and content
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Note title
-        Text(
-            text = "Note",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Black,
-            fontFamily = MaterialTheme.typography.headlineLarge.fontFamily
-        )
-
-        // Space between title and text field
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Text field taking remaining space
-        TextField(
-            value = noteText,
-            onValueChange = { noteText = it },
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            label = { Text("Note Content") },
-            placeholder = { Text("Enter your note...") },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.Transparent,
-                focusedContainerColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
-            ),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-            singleLine = false,
-            maxLines = Int.MAX_VALUE
-        )
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            BasicTextField(
+                value = noteTitle,
+                onValueChange = { noteTitle = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                textStyle = MaterialTheme.typography.headlineMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (noteTitle.isEmpty()) {
+                            Text(
+                                text = "Title",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+
+            BasicTextField(
+                value = noteText,
+                onValueChange = { noteText = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 4.dp),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (noteText.isEmpty()) {
+                            Text(
+                                text = "Note",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+        }
     }
 }

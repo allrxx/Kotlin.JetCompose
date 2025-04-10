@@ -130,26 +130,51 @@ fun AppNavigation(noteViewModel: NoteViewModel, profileViewModel: ProfileViewMod
             "editor/{noteJson}",
             arguments = listOf(navArgument("noteJson") { type = NavType.StringType })
         ) { backStackEntry ->
-            if (authState is AuthScreenState.Authenticated) {
+            val currentAuthState = authState // Capture the state locally
+            if (currentAuthState is AuthScreenState.Authenticated) {
                 val noteJson = backStackEntry.arguments?.getString("noteJson")
-                val note = Gson().fromJson(noteJson, NoteItem::class.java)
-                Log.d("NavGraph", "Showing editor for note: ${note.id}")
-                EditorScreen(
-                    navController = navController,
-                    note = note,
-                    onSave = { updatedNote ->
-                        Log.d("NavGraph", "Saving note: ${updatedNote.id}")
-                        val userId = (authState as AuthScreenState.Authenticated).user.uid
-                        val noteEntity = updatedNote.toNoteEntity(userId = userId)
-                        if (note.text.isEmpty()) {
-                            Log.d("NavGraph", "Inserting new note: ${noteEntity.id}")
-                            noteViewModel.insertNote(noteEntity)
-                        } else {
-                            Log.d("NavGraph", "Updating existing note: ${noteEntity.id}")
-                            noteViewModel.updateNote(noteEntity)
+                // Handle potential deserialization error
+                val note = try {
+                    Gson().fromJson(noteJson, NoteItem::class.java)
+                } catch (e: Exception) {
+                    Log.e("NavGraph", "Error deserializing note JSON: $noteJson", e)
+                    null // Handle error state, maybe navigate back or show error
+                }
+
+                if (note != null) {
+                    Log.d("NavGraph", "Showing editor for note: ${note.id}")
+                    EditorScreen(
+                        navController = navController,
+                        note = note,
+                        noteViewModel = noteViewModel, // Pass NoteViewModel
+                        // Modify onSave lambda
+                        onSave = { updatedNote, callback ->
+                            Log.d("NavGraph", "Save requested for note: ${updatedNote.id}")
+                            val userId = currentAuthState.user.uid
+                            val noteEntity = updatedNote.toNoteEntity(userId = userId)
+
+                            val isNewNote = note.text.isEmpty() && note.title.isEmpty() // Heuristic for new note
+                            if (isNewNote) {
+                                Log.d("NavGraph", "Inserting new note: ${noteEntity.id}")
+                                noteViewModel.insertNote(noteEntity) { result ->
+                                    callback(result) // Forward result to EditorScreen
+                                }
+                            } else {
+                                Log.d("NavGraph", "Updating existing note: ${noteEntity.id}")
+                                noteViewModel.updateNote(noteEntity) { result ->
+                                    callback(result) // Forward result to EditorScreen
+                                }
+                            }
                         }
+                    )
+                } else {
+                     // Handle case where note is null after deserialization attempt
+                    Log.e("NavGraph", "Failed to load note for editor, navigating back.")
+                    // Navigate back or show an error message
+                    LaunchedEffect(Unit) {
+                       navController.popBackStack()
                     }
-                )
+                }
             } else {
                 Log.w("NavGraph", "User became unauthenticated in editor, navigating to login")
                 navController.navigate("login") {
