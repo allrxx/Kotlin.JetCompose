@@ -7,18 +7,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,15 +32,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.happybirthday.backend.NoteViewModel
-import com.example.happybirthday.backend.toNoteEntity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
-import java.util.UUID
 import android.util.Log
+
+val AddNoteFabColor = Color(0xFFFF4081)           // unique pink
+val AddNoteFabContentColor = Color.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +68,10 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
             TopAppBar(
                 title = {
                     Column {
-                        Text("My Notes")
+                        Text(
+                            "NotePad",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
                         currentUser?.email?.let { email ->
                             Text(
                                 text = email,
@@ -75,25 +81,30 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        // Navigate to the profile screen
-                        navController.navigate("profile")
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile"
-                        )
+                    FilledIconButton(
+                        onClick = { navController.navigate("profile") },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profile")
                     }
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = "Sign out"
+                    FilledIconButton(
+                        onClick = onLogout,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign out")
                     }
                 },
                 scrollBehavior = scrollBehavior
             )
         },
+        // Center the FAB and apply custom colors
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -103,23 +114,23 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
                         launchSingleTop = true
                     }
                 },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = AddNoteFabColor,
+                contentColor = AddNoteFabContentColor
             ) {
                 Icon(Icons.Default.Add, contentDescription = "New Note")
             }
-        }
+        },
+        floatingActionButtonPosition = FabPosition.Center,  // Center position
     ) { paddingValues ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else {
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Adaptive(minSize = 160.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalItemSpacing = 8.dp,
-                modifier = Modifier.padding(paddingValues)
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp), // Adjusted padding
+                verticalArrangement = Arrangement.spacedBy(12.dp), // Spacing between list items
+                modifier = Modifier.fillMaxSize().padding(paddingValues) // Use fillMaxSize for list
             ) {
                 items(
                     items = notes,
@@ -127,9 +138,6 @@ fun HomeScreen(navController: NavController, noteViewModel: NoteViewModel, onLog
                 ) { noteItem ->
                     NoteEditorItem(
                         note = noteItem,
-                        onUpdate = { updatedNote ->
-                            // Currently unused in this simplified item
-                        },
                         onDelete = {
                             Log.d("HomeScreen", "Deleting note: ${noteItem.id}")
                             noteViewModel.deleteNoteById(noteItem.id)
