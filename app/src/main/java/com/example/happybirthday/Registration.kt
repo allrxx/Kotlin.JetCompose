@@ -38,6 +38,8 @@ import com.example.happybirthday.backend.AuthViewModel
 import com.example.happybirthday.backend.AuthResult
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,8 +97,9 @@ fun RegistrationScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -154,10 +157,12 @@ fun RegistrationScreen(
 
                     authViewModel.registerUser(email, password)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 enabled = !isLoading
             ) {
-                Text(if (isLoading) "Creating Account..." else "Create Account")
+                Text(if (isLoading) "CREATING ACCOUNT..." else "CREATE ACCOUNT")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -165,7 +170,7 @@ fun RegistrationScreen(
             TextButton(
                 onClick = onLoginNavigate
             ) {
-                Text("Already have an account? Sign In instead")
+                Text("Already have an account? Sign in")
             }
         }
     }
