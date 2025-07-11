@@ -6,9 +6,11 @@ A modern and secure **note-taking application** designed and built using **Googl
 
 ## 🎥 Demo
 
-![Login Screen](screenshots/Login.jpg)
-![Home Screen](screenshots/Home.jpg)
-![Editor Screen](screenshots/Editor.jpg)
+<p align="start">
+  <img src="screenshots/Login.jpg" alt="Login Screen" width="220"/>
+  <img src="screenshots/Home.jpg" alt="Home Screen" width="220"/>
+  <img src="screenshots/Editor.jpg" alt="Editor Screen" width="220"/>
+</p>
 
 ## 🛠️ Tech Stack
 - **Language:** Kotlin (version 2.0.21)
