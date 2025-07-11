@@ -5,7 +5,10 @@
 A modern and secure **note-taking application** designed and built using **Google's Material You principles (Material 3)** for a clean, intuitive user experience. The app leverages **Jetpack Compose** for responsive UI, **Firebase Auth** for secure cloud-based authentication, and **Room DB** for reliable local data persistence for notes and user profiles.
 
 ## 🎥 Demo
-![App Demo](./demo.gif)
+
+![Login Screen](screenshots/Login.jpg)
+![Home Screen](screenshots/Home.jpg)
+![Editor Screen](screenshots/Editor.jpg)
 
 ## 🛠️ Tech Stack
 - **Language:** Kotlin (version 2.0.21)
